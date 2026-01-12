@@ -1,5 +1,5 @@
 import type { DBSchema } from 'idb'
-import type { Item, Location, Experience, Feeling, Event, Tag } from '@/types'
+import type { Item, Location, Experience, Feeling, Event, Tag, ItemLocationHistory } from '@/types'
 
 export interface MemoryDB extends DBSchema {
   items: {
@@ -61,6 +61,15 @@ export interface MemoryDB extends DBSchema {
   experience_tags: {
     key: [string, string] // [experience_id, tag_id]
     value: { experience_id: string; tag_id: string }
+  }
+  item_location_histories: {
+    key: string
+    value: ItemLocationHistory
+    indexes: {
+      'by-item': string
+      'by-location': string
+      'by-started': number
+    }
   }
 }
 

@@ -22,30 +22,39 @@
       <router-link to="/items/new" class="btn-primary">添加第一个物品</router-link>
     </div>
 
-    <div v-else class="item-grid">
-      <router-link
+    <div v-else class="item-list">
+      <SwipeAction
         v-for="item in filteredItems"
         :key="item.id"
-        :to="`/items/${item.id}`"
-        class="item-card"
+        ref="swipeActionRefs"
+        :actions-width="80"
       >
-        <div class="item-name">{{ item.name }}</div>
-        <div class="item-meta">
-          <span class="status-badge" :class="item.status">{{ statusText[item.status] }}</span>
+        <div class="item-content" @click="goToDetail(item.id)">
+          <div class="item-name">{{ item.name }}</div>
+          <div class="item-meta">
+            <span class="status-badge" :class="item.status">{{ statusText[item.status] }}</span>
+          </div>
         </div>
-      </router-link>
+        <template #actions>
+          <button class="delete-btn" @touchstart.stop @touchend.stop @click.stop="deleteItem(item)">删除</button>
+        </template>
+      </SwipeAction>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { itemRepositoryExt } from '@/db/repositories'
+import { useRouter } from 'vue-router'
+import { itemRepository } from '@/db/repositories'
 import type { Item } from '@/types'
+import SwipeAction from '@/components/domain/SwipeAction.vue'
 
+const router = useRouter()
 const items = ref<Item[]>([])
 const searchKeyword = ref('')
 const loading = ref(true)
+const swipeActionRefs = ref<InstanceType<typeof SwipeAction>[]>([])
 
 const statusText: Record<string, string> = {
   using: '在用',
@@ -63,8 +72,22 @@ const filteredItems = computed(() => {
   )
 })
 
+function goToDetail(id: string) {
+  router.push(`/items/${id}`)
+}
+
+async function deleteItem(item: Item) {
+  // 关闭其他已打开的滑面板
+  swipeActionRefs.value.forEach(ref => ref.close())
+
+  if (confirm(`确定要删除"${item.name}"吗？`)) {
+    await itemRepository.delete(item.id)
+    items.value = items.value.filter(i => i.id !== item.id)
+  }
+}
+
 onMounted(async () => {
-  items.value = await itemRepositoryExt.findAll()
+  items.value = await itemRepository.findAll()
   loading.value = false
 })
 </script>
@@ -132,13 +155,13 @@ onMounted(async () => {
   border-radius: 8px;
 }
 
-.item-grid {
+.item-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.item-card {
+.item-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -146,6 +169,7 @@ onMounted(async () => {
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
 }
 
 .item-name {
@@ -169,5 +193,16 @@ onMounted(async () => {
 .status-badge.idle {
   background: #fff3e0;
   color: #ef6c00;
+}
+
+.delete-btn {
+  width: 80px;
+  height: 100%;
+  border: none;
+  background: #ff5252;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  touch-action: none;
 }
 </style>

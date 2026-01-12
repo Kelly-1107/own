@@ -65,3 +65,13 @@ export interface ExperienceTag {
   experience_id: string
   tag_id: string
 }
+
+// ItemLocationHistory（物品位置历史）
+export interface ItemLocationHistory {
+  id: string
+  item_id: string
+  location_id: string
+  started_at: number       // 开始时间
+  ended_at?: number        // 结束时间（迁移到新位置时记录）
+  created_at: number
+}

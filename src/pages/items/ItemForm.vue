@@ -47,6 +47,11 @@
           <option value="discarded">已丢弃</option>
         </select>
       </div>
+
+      <div class="form-group">
+        <label>位置（可选）</label>
+        <LocationPicker v-model="form.locationId" />
+      </div>
     </form>
   </div>
 </template>
@@ -54,8 +59,9 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { itemRepositoryExt } from '@/db/repositories'
+import { itemRepositoryExt, itemRepository, itemLocationRepositoryExt } from '@/db/repositories'
 import type { Item } from '@/types'
+import LocationPicker from '@/components/domain/LocationPicker.vue'
 
 const router = useRouter()
 
@@ -63,13 +69,29 @@ const form = reactive({
   name: '',
   alias: '',
   category: '',
-  status: 'using' as Item['status']
+  status: 'using' as Item['status'],
+  locationId: null as string | null
 })
 
 async function save() {
   if (!form.name.trim()) return
 
-  await itemRepositoryExt.createWithName(form.name)
+  const item = await itemRepositoryExt.createWithName(form.name)
+
+  // 更新物品的其他字段
+  if (form.alias || form.category || form.status !== 'using') {
+    await itemRepository.update(item.id, {
+      alias: form.alias || undefined,
+      category: form.category || undefined,
+      status: form.status
+    })
+  }
+
+  // 如果选择了位置，关联位置
+  if (form.locationId) {
+    await itemLocationRepositoryExt.assignLocation(item.id, form.locationId)
+  }
+
   router.push('/items')
 }
 </script>
