@@ -30,12 +30,7 @@
 
       <div class="form-group">
         <label>分类</label>
-        <input
-          v-model="form.category"
-          type="text"
-          placeholder="如：衣物、食品、电子产品"
-          class="form-input"
-        />
+        <CategoryPicker v-model="form.category" placeholder="请选择或新建分类" />
       </div>
 
       <div class="form-group">
@@ -62,6 +57,7 @@ import { useRouter } from 'vue-router'
 import { itemRepositoryExt, itemRepository, itemLocationRepositoryExt } from '@/db/repositories'
 import type { Item } from '@/types'
 import LocationPicker from '@/components/domain/LocationPicker.vue'
+import CategoryPicker from '@/components/domain/CategoryPicker.vue'
 
 const router = useRouter()
 
